@@ -5,6 +5,7 @@ import { sanitizeRepoIcon } from '../../../../shared/repo-icon'
 import { normalizeRepoBadgeColor } from '../../../../shared/repo-badge-color'
 import { normalizeGhAccountBinding } from '../../../../shared/github/account-binding'
 import { normalizeJiraProjectReference } from '../../../../shared/jira/jira-project-reference'
+import { normalizeRepoTaskIntegration } from '../../../../shared/repo-task-integration'
 import { sanitizeAgentWorkspaceTrustDecision } from '../../../../shared/agent-workspace-trust-decision'
 import { findRepoForHost, repoMatchesHostIdentity } from './repo-host-identity'
 import { getRepoHostIdentityForParts } from '../../../../shared/repo-host-identity'
@@ -27,6 +28,14 @@ export function sanitizeRepoUpdate(updates: RepoUpdate): RepoUpdate {
       delete sanitized.defaultJiraProject
     } else {
       sanitized.defaultJiraProject = reference
+    }
+  }
+  if ('taskIntegration' in sanitized) {
+    const integration = normalizeRepoTaskIntegration(sanitized.taskIntegration)
+    if (integration === undefined) {
+      delete sanitized.taskIntegration
+    } else {
+      sanitized.taskIntegration = integration
     }
   }
   if ('badgeColor' in sanitized) {

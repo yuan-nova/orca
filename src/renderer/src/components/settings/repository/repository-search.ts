@@ -12,6 +12,11 @@ import { getRepositoryGitHooksSearchEntries } from './execution/repository-git-h
 import { getRepositoryGitWorktreeSearchEntries } from './execution/repository-git-worktree-search-entries'
 import { getRepositoryFormatterSearchEntry } from './RepositoryFormatterSection'
 import { getRepositoryAgentTrustSearchEntry } from './RepositoryAgentTrustSection'
+import {
+  getRepositoryTaskIntegrationDescription,
+  getRepositoryTaskIntegrationKeywords,
+  getRepositoryTaskIntegrationTitle
+} from './RepositoryTaskIntegrationSection'
 
 type RepositoryPaneSearchOptions = {
   isLocalWindowsProject?: boolean
@@ -30,6 +35,11 @@ export function getRepositoryPaneSearchEntries(
   return [
     getRepositoryFormatterSearchEntry(),
     getRepositoryAgentTrustSearchEntry(),
+    {
+      title: getRepositoryTaskIntegrationTitle(),
+      description: getRepositoryTaskIntegrationDescription(),
+      keywords: getRepositoryTaskIntegrationKeywords(repo)
+    },
     {
       title: translate('components.RepositoryJiraProjectSection.title', 'Default Jira project'),
       description: translate(

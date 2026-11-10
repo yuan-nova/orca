@@ -6,6 +6,7 @@ import { normalizeRepoBadgeColor } from '../../../shared/repo-badge-color'
 import { sanitizeRepoIcon } from '../../../shared/repo-icon'
 import { normalizeGhAccountBinding } from '../../../shared/github/account-binding'
 import { normalizeJiraProjectReference } from '../../../shared/jira/jira-project-reference'
+import { normalizeRepoTaskIntegration } from '../../../shared/repo-task-integration'
 import type { GhAccountBinding } from '../../../shared/github/account-binding'
 import { sanitizeAgentWorkspaceTrustDecision } from '../../../shared/agent-workspace-trust-decision'
 import {
@@ -80,6 +81,7 @@ export function sanitizeRepoUpdatesForPersistence<
       | 'forkSyncMode'
       | 'agentWorkspaceTrust'
       | 'defaultJiraProject'
+      | 'taskIntegration'
       | 'customWorktreeVisibilitySources'
       | 'worktreeVisibilitySourcePreferences'
     >
@@ -97,6 +99,14 @@ export function sanitizeRepoUpdatesForPersistence<
       delete sanitized.defaultJiraProject
     } else {
       sanitized.defaultJiraProject = reference
+    }
+  }
+  if ('taskIntegration' in sanitized) {
+    const integration = normalizeRepoTaskIntegration(sanitized.taskIntegration)
+    if (integration === undefined) {
+      delete sanitized.taskIntegration
+    } else {
+      sanitized.taskIntegration = integration
     }
   }
   if ('badgeColor' in sanitized) {

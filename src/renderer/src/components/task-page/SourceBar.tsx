@@ -14,6 +14,7 @@ import {
   SelectItem
 } from '@/components/ui/select'
 import { openAppHttpLink } from '@/lib/browser/navigation/app-http-link-open'
+import { resolveTaskIntegrationForRepos } from '../../../../shared/repo-task-integration'
 export function TaskPageSourceBar({
   model
 }: {
@@ -31,6 +32,7 @@ export function TaskPageSourceBar({
     jiraSites,
     selectedJiraSiteId,
     visibleSourceOptions,
+    selectedRepos,
     taskSource,
     taskSourceAvailabilityNoticeByProvider,
     taskSourceContextSummary,
@@ -95,6 +97,10 @@ export function TaskPageSourceBar({
                         recordTasksInteraction: false
                       }
                     )
+                    // A project's own default stays put; only the global last-used source is remembered.
+                    if (resolveTaskIntegrationForRepos(selectedRepos)) {
+                      return
+                    }
                     void updateSettings({
                       defaultTaskSource: source.id
                     }).catch(() => {

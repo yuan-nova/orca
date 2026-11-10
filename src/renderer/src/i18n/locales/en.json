@@ -21325,6 +21325,15 @@
       "keywordDefaultProject": "default project",
       "keywordIssuePicker": "issue picker"
     },
+    "RepositoryTaskIntegrationSection": {
+      "title": "Task integrations",
+      "description": "Choose which task sources Tasks shows for this project. Off follows the global Tasks settings.",
+      "saveFailed": "Could not save task integrations. Update this runtime and try again.",
+      "defaultSource": "Default task source",
+      "accountsHint": "Accounts are still connected once in Integrations. Linear and Jira use the workspace or site selected there.",
+      "keywordTasks": "tasks",
+      "keywordTaskSource": "task source"
+    },
     "managed-runtime": {
       "cancelled": "Installation cancelled.",
       "cancelling": "Cancelling…",
