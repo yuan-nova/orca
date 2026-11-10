@@ -75,6 +75,8 @@ function useTaskPageFixture(store: ReturnType<typeof createTestStore>, remote: b
     ...savedFilters,
     jiraConnected: true,
     selectedJiraSiteId: 'site-1',
+    selectedRepos: [],
+    jiraSites: [],
     jiraHasWorkspace: false,
     linkedJiraIssueRefs: [],
     linkedJiraIssueRefsSignature: '[]',

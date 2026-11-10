@@ -30,7 +30,10 @@ import { toast } from 'sonner'
 import { translate } from '@/i18n/i18n'
 import { getTaskPageRepoSourceContext } from '../../lib/task-repo-source-context'
 import { resolveTaskIntegrationForRepos } from '../../../../shared/repo-task-integration'
-import { hideProviderInRepoTaskIntegrations } from './task-page-repo-task-integration'
+import {
+  getProjectJiraSiteId,
+  hideProviderInRepoTaskIntegrations
+} from './task-page-repo-task-integration'
 export function useTaskPageRepoSelection(model: TaskPageStoreBindingsModel) {
   const {
     settings,
@@ -118,17 +121,25 @@ export function useTaskPageRepoSelection(model: TaskPageStoreBindingsModel) {
       ? (linearWorkspaces.find((workspace) => workspace.id === selectedLinearWorkspaceId) ?? null)
       : null
   const jiraSites = useMemo(() => jiraStatus.sites ?? [], [jiraStatus.sites])
-  const selectedJiraSiteId =
-    jiraStatus.selectedSiteId ?? jiraStatus.activeSiteId ?? jiraSites[0]?.id ?? null
-  const selectedJiraSite =
-    selectedJiraSiteId && selectedJiraSiteId !== 'all'
-      ? (jiraSites.find((site) => site.id === selectedJiraSiteId) ?? null)
-      : null
   // Why: a project's own task setup wins over the global Tasks providers while only its repos are selected.
   const projectTaskIntegration = useMemo(
     () => resolveTaskIntegrationForRepos(selectedRepos),
     [selectedRepos]
   )
+  const projectJiraSiteId = useMemo(
+    () => getProjectJiraSiteId(selectedRepos, jiraSites),
+    [jiraSites, selectedRepos]
+  )
+  const selectedJiraSiteId =
+    projectJiraSiteId ??
+    jiraStatus.selectedSiteId ??
+    jiraStatus.activeSiteId ??
+    jiraSites[0]?.id ??
+    null
+  const selectedJiraSite =
+    selectedJiraSiteId && selectedJiraSiteId !== 'all'
+      ? (jiraSites.find((site) => site.id === selectedJiraSiteId) ?? null)
+      : null
   const preferredVisibleTaskProviders = useMemo(
     () =>
       projectTaskIntegration

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import type { Repo } from '../../../../../shared/repo-types'
 import { getRepoExecutionHostId } from '../../../../../shared/execution-host'
 import {
@@ -7,6 +7,8 @@ import {
 } from '../../../../../shared/repo-task-integration'
 import { TASK_PROVIDERS, type TaskProvider } from '../../../../../shared/task-providers'
 import { getSourceOptions } from '@/components/task-page/task-page-localized-options'
+import { taskSourceRuntimeTarget } from '@/lib/task-source-runtime-target'
+import { useJiraProjectInventory } from '../../use-jira-project-inventory'
 import { useAppStore } from '@/store/index'
 import { Checkbox } from '../../ui/checkbox'
 import { Label } from '../../ui/label'
@@ -40,6 +42,9 @@ export function getRepositoryTaskIntegrationKeywords(repo: Pick<Repo, 'displayNa
   ]
 }
 
+// Select items need a non-empty value; this one stands for "no pinned site".
+const FOLLOW_TASKS_JIRA_SITE = '__follow-tasks-site__'
+
 export function RepositoryTaskIntegrationSection({
   repo,
   updateRepo,
@@ -55,6 +60,13 @@ export function RepositoryTaskIntegrationSection({
   const globalDefaultProvider = useAppStore((state) => state.settings?.defaultTaskSource)
   const integration = normalizeRepoTaskIntegration(repo.taskIntegration) ?? null
   const sourceOptions = getSourceOptions()
+  const showsJira = integration?.providers.includes('jira') === true
+  const jiraSource = useMemo(() => taskSourceRuntimeTarget({ hostId }), [hostId])
+  const jiraInventory = useJiraProjectInventory(jiraSource, showsJira)
+  // Keep a pinned site listed even when this runtime no longer reports it, so the choice stays visible.
+  const pinnedSiteMissing =
+    integration?.jiraSiteId !== undefined &&
+    !jiraInventory.sites.some((site) => site.id === integration.jiraSiteId)
 
   const save = async (next: RepoTaskIntegration | null) => {
     setError(null)
@@ -95,10 +107,7 @@ export function RepositoryTaskIntegrationSection({
     const providers = checked
       ? [...integration.providers, provider]
       : integration.providers.filter((entry) => entry !== provider)
-    const next = normalizeRepoTaskIntegration({
-      providers,
-      defaultProvider: integration.defaultProvider
-    })
+    const next = normalizeRepoTaskIntegration({ ...integration, providers })
     if (next) {
       void save(next)
     }
@@ -174,10 +183,67 @@ export function RepositoryTaskIntegrationSection({
               </SelectContent>
             </Select>
           </div>
+          {showsJira ? (
+            <div className="space-y-1">
+              <div className="flex items-center justify-between gap-4">
+                <Label>
+                  {translate('components.RepositoryTaskIntegrationSection.jiraSite', 'Jira site')}
+                </Label>
+                <Select
+                  value={integration.jiraSiteId ?? FOLLOW_TASKS_JIRA_SITE}
+                  disabled={jiraInventory.loading}
+                  onValueChange={(value) => {
+                    const { jiraSiteId: _previous, ...rest } = integration
+                    void save(
+                      normalizeRepoTaskIntegration(
+                        value === FOLLOW_TASKS_JIRA_SITE ? rest : { ...rest, jiraSiteId: value }
+                      ) ?? integration
+                    )
+                  }}
+                >
+                  <SelectTrigger size="sm" className="min-w-40">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={FOLLOW_TASKS_JIRA_SITE}>
+                      {translate(
+                        'components.RepositoryTaskIntegrationSection.jiraSiteFollow',
+                        'Site selected in Tasks'
+                      )}
+                    </SelectItem>
+                    {jiraInventory.sites.map((site) => (
+                      <SelectItem key={site.id} value={site.id}>
+                        {site.displayName || site.siteUrl}
+                      </SelectItem>
+                    ))}
+                    {pinnedSiteMissing && integration.jiraSiteId ? (
+                      <SelectItem value={integration.jiraSiteId}>
+                        {translate(
+                          'components.RepositoryTaskIntegrationSection.jiraSiteMissing',
+                          'Disconnected Jira site'
+                        )}
+                      </SelectItem>
+                    ) : null}
+                  </SelectContent>
+                </Select>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {pinnedSiteMissing
+                  ? translate(
+                      'components.RepositoryTaskIntegrationSection.jiraSiteMissingHint',
+                      'This Jira site is no longer connected, so Tasks uses the site selected there. Reconnect it in Integrations or pick another site.'
+                    )
+                  : translate(
+                      'components.RepositoryTaskIntegrationSection.jiraSiteHint',
+                      'Each Jira site has its own URL and token. Add sites in Integrations, then pick the one this project uses.'
+                    )}
+              </p>
+            </div>
+          ) : null}
           <p className="text-xs text-muted-foreground">
             {translate(
               'components.RepositoryTaskIntegrationSection.accountsHint',
-              'Accounts are still connected once in Integrations. Linear and Jira use the workspace or site selected there.'
+              'Accounts are connected in Integrations. Linear uses the workspace selected there.'
             )}
           </p>
         </div>

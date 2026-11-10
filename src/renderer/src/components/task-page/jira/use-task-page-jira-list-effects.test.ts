@@ -18,6 +18,8 @@ function createModel(): TaskPageLinearCollectionEffectsModel {
     listJiraIssues,
     jiraConnected: true,
     selectedJiraSiteId: 'site-1',
+    selectedRepos: [],
+    jiraSites: [],
     taskSource: 'jira',
     jiraTaskSourceContext: null,
     jiraHasWorkspace: false,
@@ -376,6 +378,36 @@ describe('useTaskPageJiraListEffects refresh wiring', () => {
       await Promise.resolve()
     })
     expect(model.setJiraIssues).not.toHaveBeenCalled()
+  })
+
+  it('reads the Jira site the selected project pins, then searches it too', async () => {
+    const model = createModel()
+    Object.assign(model, {
+      jiraSites: [{ id: 'site-b' }],
+      selectedRepos: [
+        { taskIntegration: { providers: ['jira'], defaultProvider: 'jira', jiraSiteId: 'site-b' } }
+      ]
+    })
+    const { rerender } = renderHook(() => useTaskPageJiraListEffects(model))
+    await waitFor(() =>
+      expect(listJiraIssues).toHaveBeenCalledWith('assigned', 50, {
+        sourceContext: null,
+        force: false,
+        siteId: 'site-b'
+      })
+    )
+    await act(async () => {
+      model.appliedJiraSearch = 'fix login'
+      rerender()
+      await Promise.resolve()
+    })
+    await waitFor(() =>
+      expect(searchJiraIssues).toHaveBeenCalledWith(expect.any(String), 50, {
+        sourceContext: null,
+        siteId: 'site-b',
+        force: false
+      })
+    )
   })
 
   it('passes force only for a refresh nonce change', async () => {

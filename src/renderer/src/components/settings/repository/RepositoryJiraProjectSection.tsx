@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import type { Repo } from '../../../../../shared/repo-types'
 import type { JiraProjectReference } from '../../../../../shared/jira/jira-project-reference'
 import { getRepoExecutionHostId } from '../../../../../shared/execution-host'
+import { normalizeRepoTaskIntegration } from '../../../../../shared/repo-task-integration'
 import { taskSourceRuntimeTarget } from '@/lib/task-source-runtime-target'
 import { useAppStore } from '@/store/index'
 import { useJiraProjectInventory } from '../../use-jira-project-inventory'
@@ -21,6 +22,15 @@ export function RepositoryJiraProjectSection({
   const hostId = getRepoExecutionHostId(repo)
   const source = useMemo(() => taskSourceRuntimeTarget({ hostId }), [hostId])
   const inventory = useJiraProjectInventory(source, true)
+  const pinnedSiteId = normalizeRepoTaskIntegration(repo.taskIntegration)?.jiraSiteId
+  // A project pinned to one Jira site only offers that site's projects.
+  const projects = useMemo(
+    () =>
+      pinnedSiteId
+        ? inventory.projects.filter((project) => project.siteId === pinnedSiteId)
+        : inventory.projects,
+    [inventory.projects, pinnedSiteId]
+  )
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const applyProject = async (project: JiraProjectReference | null) => {
@@ -72,7 +82,7 @@ export function RepositoryJiraProjectSection({
     >
       <p className="text-sm font-semibold">{label}</p>
       <JiraProjectPicker
-        projects={inventory.projects}
+        projects={projects}
         value={repo.defaultJiraProject ?? null}
         onChange={(project) => void applyProject(project)}
         label={label}

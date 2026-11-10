@@ -21,6 +21,7 @@ import { readLinkedJiraIssues } from './task-page-jira-linked-issues'
 import { ipcOrRuntimeTargetForHostId } from '@/runtime/rpc/targets/runtime-client-target'
 import { buildJiraPresetJql } from '../../../../../shared/jira/jira-preset-jql'
 import { restrictJiraQueryToProject } from '../../../../../shared/jira/jira-project-reference'
+import { getProjectJiraSiteId } from '../task-page-repo-task-integration'
 export function useTaskPageJiraListEffects(model: TaskPageLinearCollectionEffectsModel) {
   const {
     accountBackedTaskSourceHostId,
@@ -32,6 +33,8 @@ export function useTaskPageJiraListEffects(model: TaskPageLinearCollectionEffect
     listJiraIssues,
     jiraConnected,
     selectedJiraSiteId,
+    selectedRepos,
+    jiraSites,
     taskSource,
     jiraTaskSourceContext,
     jiraTaskSourceScopeKey,
@@ -63,6 +66,7 @@ export function useTaskPageJiraListEffects(model: TaskPageLinearCollectionEffect
     setJiraProjectStatusOrder,
     displayedJiraIssues
   } = model
+  const projectJiraSiteId = getProjectJiraSiteId(selectedRepos, jiraSites)
   const statusOrderOwner = useMemo(
     () =>
       ipcOrRuntimeTargetForHostId(jiraTaskSourceContext?.hostId ?? accountBackedTaskSourceHostId),
@@ -129,8 +133,8 @@ export function useTaskPageJiraListEffects(model: TaskPageLinearCollectionEffect
         sourceContext: jiraTaskSourceContext,
         ...(favourite
           ? { siteId: favourite.siteId }
-          : jiraProjectFilter
-            ? { siteId: jiraProjectFilter.siteId }
+          : jiraProjectFilter || projectJiraSiteId
+            ? { siteId: jiraProjectFilter?.siteId ?? projectJiraSiteId }
             : {}),
         force
       })
@@ -162,6 +166,7 @@ export function useTaskPageJiraListEffects(model: TaskPageLinearCollectionEffect
           : listJiraIssues(activeJiraPreset, JIRA_ITEM_LIMIT, {
               sourceContext: jiraTaskSourceContext,
               force,
+              ...(projectJiraSiteId ? { siteId: projectJiraSiteId } : {}),
               ...(selectedJiraStatuses.length || jiraCurrentSprint
                 ? {
                     filters: {
@@ -240,6 +245,7 @@ export function useTaskPageJiraListEffects(model: TaskPageLinearCollectionEffect
     taskSource,
     jiraConnected,
     selectedJiraSiteId,
+    projectJiraSiteId,
     jiraRemoteSearch,
     activeJiraPreset,
     jiraHasWorkspace,

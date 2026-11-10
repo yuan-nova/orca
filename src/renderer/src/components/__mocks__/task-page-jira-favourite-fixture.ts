@@ -95,6 +95,7 @@ export function useFavouriteTaskPage({
     taskResumeApplied: true,
     jiraConnected: true,
     selectedJiraSiteId: siteId,
+    jiraSites: [],
     repos: [],
     selectedRepos: [],
     pageData: {},

@@ -149,7 +149,8 @@ export function createJiraCollectionReadActions(
 
     listJiraIssues: async (filter = 'assigned', limit = 30, options) => {
       const scope = getJiraReadScope(get().settings, options?.sourceContext)
-      const siteId = getSelectedJiraSiteId(get().jiraStatus)
+      const siteId =
+        options && 'siteId' in options ? options.siteId : getSelectedJiraSiteId(get().jiraStatus)
       const statuses = normalizeJiraStatusSelection(options?.filters?.statuses).sort()
       const currentSprint = options?.filters?.currentSprint === true
       const filters =
