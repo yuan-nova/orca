@@ -58,6 +58,7 @@ export type RepositoryApi = {
         | 'kind'
         | 'issueSourcePreference'
         | 'defaultJiraProject'
+        | 'taskIntegration'
         | 'externalWorktreeVisibilityPromptDismissedAt'
         | 'externalWorktreeInboxBaselinePaths'
         | 'importedExternalWorktreePaths'

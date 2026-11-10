@@ -7,6 +7,7 @@ import type { GitRemoteIdentity } from './git/remotes/git-remote-identity'
 import type { RepoSourceControlAiOverrides } from './source-control/ai/settings/source-control-ai-settings-types'
 import type { RepoProjectHostSetupMethod } from './project-types'
 import type { JiraProjectReference } from './jira/jira-project-reference'
+import type { RepoTaskIntegration } from './repo-task-integration'
 import type { OrcadRetainedMarker } from './orcad-retained-marker'
 import type { EditorFormatter } from './editor-formatter'
 import type { AgentWorkspaceTrustDecision } from './agent-workspace-trust-decision'
@@ -65,6 +66,8 @@ export type Repo = {
   issueSourcePreference?: IssueSourcePreference
   /** Host-owned Jira project default; users can override it in each composer. */
   defaultJiraProject?: JiraProjectReference | null
+  /** Project-owned Tasks providers; absent/null follows the global Tasks settings. */
+  taskIntegration?: RepoTaskIntegration | null
   /** Bind host/login only; resolve a short-lived gh token at spawn and inject into that child’s environment. */
   ghAccount?: GhAccountBinding
   /** Controls Orca's fork-default-branch sync offer for repos with upstream metadata. */

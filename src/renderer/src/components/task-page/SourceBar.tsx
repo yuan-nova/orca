@@ -14,6 +14,11 @@ import {
   SelectItem
 } from '@/components/ui/select'
 import { openAppHttpLink } from '@/lib/browser/navigation/app-http-link-open'
+import { resolveTaskIntegrationForRepos } from '../../../../shared/repo-task-integration'
+import {
+  getProjectJiraSiteId,
+  setJiraSiteInRepoTaskIntegrations
+} from './task-page-repo-task-integration'
 export function TaskPageSourceBar({
   model
 }: {
@@ -31,6 +36,7 @@ export function TaskPageSourceBar({
     jiraSites,
     selectedJiraSiteId,
     visibleSourceOptions,
+    selectedRepos,
     taskSource,
     taskSourceAvailabilityNoticeByProvider,
     taskSourceContextSummary,
@@ -49,6 +55,7 @@ export function TaskPageSourceBar({
     handleLinearTeamSelectionChange,
     handleLinearScopeOpen
   } = model
+  const projectJiraSiteId = getProjectJiraSiteId(selectedRepos, jiraSites)
   return (
     <div className="flex items-center justify-between gap-2">
       <div
@@ -95,6 +102,10 @@ export function TaskPageSourceBar({
                         recordTasksInteraction: false
                       }
                     )
+                    // A project's own default stays put; only the global last-used source is remembered.
+                    if (resolveTaskIntegrationForRepos(selectedRepos)) {
+                      return
+                    }
                     void updateSettings({
                       defaultTaskSource: source.id
                     }).catch(() => {
@@ -197,25 +208,41 @@ export function TaskPageSourceBar({
             <Select
               value={selectedJiraSiteId ?? undefined}
               onValueChange={(value) => {
+                // A project-pinned site is switched in the project setup, which cannot pin "all".
+                if (projectJiraSiteId && value === 'all') {
+                  return
+                }
                 setSelectedJiraIssueKey(null)
                 setSelectedJiraIssueFallback(null)
                 setJiraIssues([])
                 setJiraError(null)
                 setJiraLoading(true)
-                void selectJiraSite(value).catch(() => {
+                const failed = () =>
                   toast.error(
                     translate('auto.components.TaskPage.d09b7631b7', 'Failed to switch Jira site.')
                   )
-                })
+                if (projectJiraSiteId) {
+                  void setJiraSiteInRepoTaskIntegrations(selectedRepos, value)
+                    .then((saved) => {
+                      if (!saved) {
+                        failed()
+                      }
+                    })
+                    .catch(failed)
+                  return
+                }
+                void selectJiraSite(value).catch(failed)
               }}
             >
               <SelectTrigger className="h-8 w-[220px] rounded-md border-border/50 bg-muted/50 text-xs font-medium shadow-sm">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">
-                  {translate('auto.components.TaskPage.e592d99051', 'All Jira sites')}
-                </SelectItem>
+                {!projectJiraSiteId || projectJiraSiteId === 'all' ? (
+                  <SelectItem value="all">
+                    {translate('auto.components.TaskPage.e592d99051', 'All Jira sites')}
+                  </SelectItem>
+                ) : null}
                 {jiraSites.map((site) => (
                   <SelectItem key={site.id} value={site.id}>
                     {site.displayName}

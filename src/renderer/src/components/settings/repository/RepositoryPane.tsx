@@ -34,7 +34,7 @@ import { translate } from '@/i18n/i18n'
 import { RepositoryWindowsRuntimeSection } from './execution/RepositoryWindowsRuntimeSection'
 import { matchesRepositoryIdentitySearch } from './identity/repository-identity-search'
 import { RepositoryWorktreeDefaultsSection } from './execution/RepositoryWorktreeDefaultsSection'
-import { RepositoryJiraProjectSection } from './RepositoryJiraProjectSection'
+import { RepositoryTaskSections, getRepositoryTaskIntegrationTitle } from './RepositoryTaskSections'
 import { getProjectRuntimeSessionSummary } from './execution/repository-runtime-session-summary'
 import { getRepoOwnerWorktreeVisibilityDefaults } from '../../../store/worktree-visibility-defaults-by-host'
 import {
@@ -182,6 +182,7 @@ export function RepositoryPane({
     translate('auto.components.settings.repository.search.7e1e456a95', 'Display Name'),
     translate('auto.components.settings.repository.search.b24f00294a', 'Project Icon'),
     translate('components.RepositoryJiraProjectSection.title', 'Default Jira project'),
+    getRepositoryTaskIntegrationTitle(),
     translate('auto.components.settings.repository.search.githubAccount', 'GitHub Account'),
     getRepositoryAgentTrustSearchEntry().title,
     translate(
@@ -310,7 +311,7 @@ export function RepositoryPane({
           <RepositoryIconPicker repo={repo} updateRepo={updateSelectedRepo} />
         </SearchableSetting>
 
-        <RepositoryJiraProjectSection
+        <RepositoryTaskSections
           key={`${selectedHostId}:${repo.id}`}
           repo={repo}
           updateRepo={updateSelectedRepo}

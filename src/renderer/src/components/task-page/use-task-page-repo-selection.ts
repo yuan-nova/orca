@@ -29,6 +29,11 @@ import {
 import { toast } from 'sonner'
 import { translate } from '@/i18n/i18n'
 import { getTaskPageRepoSourceContext } from '../../lib/task-repo-source-context'
+import { resolveTaskIntegrationForRepos } from '../../../../shared/repo-task-integration'
+import {
+  getProjectJiraSiteId,
+  hideProviderInRepoTaskIntegrations
+} from './task-page-repo-task-integration'
 export function useTaskPageRepoSelection(model: TaskPageStoreBindingsModel) {
   const {
     settings,
@@ -116,17 +121,34 @@ export function useTaskPageRepoSelection(model: TaskPageStoreBindingsModel) {
       ? (linearWorkspaces.find((workspace) => workspace.id === selectedLinearWorkspaceId) ?? null)
       : null
   const jiraSites = useMemo(() => jiraStatus.sites ?? [], [jiraStatus.sites])
+  // Why: a project's own task setup wins over the global Tasks providers while only its repos are selected.
+  const projectTaskIntegration = useMemo(
+    () => resolveTaskIntegrationForRepos(selectedRepos),
+    [selectedRepos]
+  )
+  const projectJiraSiteId = useMemo(
+    () => getProjectJiraSiteId(selectedRepos, jiraSites),
+    [jiraSites, selectedRepos]
+  )
   const selectedJiraSiteId =
-    jiraStatus.selectedSiteId ?? jiraStatus.activeSiteId ?? jiraSites[0]?.id ?? null
+    projectJiraSiteId ??
+    jiraStatus.selectedSiteId ??
+    jiraStatus.activeSiteId ??
+    jiraSites[0]?.id ??
+    null
   const selectedJiraSite =
     selectedJiraSiteId && selectedJiraSiteId !== 'all'
       ? (jiraSites.find((site) => site.id === selectedJiraSiteId) ?? null)
       : null
   const preferredVisibleTaskProviders = useMemo(
-    () => normalizeVisibleTaskProviders(settings?.visibleTaskProviders),
-    [settings?.visibleTaskProviders]
+    () =>
+      projectTaskIntegration
+        ? projectTaskIntegration.providers
+        : normalizeVisibleTaskProviders(settings?.visibleTaskProviders),
+    [projectTaskIntegration, settings?.visibleTaskProviders]
   )
-  const defaultTaskSource = settings?.defaultTaskSource ?? 'github'
+  const defaultTaskSource =
+    projectTaskIntegration?.defaultProvider ?? settings?.defaultTaskSource ?? 'github'
   const visibleTaskProviders = useMemo(
     () =>
       restoreAvailableDefaultTaskProvider(
@@ -171,21 +193,39 @@ export function useTaskPageRepoSelection(model: TaskPageStoreBindingsModel) {
         defaultTaskSource,
         nextVisibleTaskProviders
       )
-      void updateSettings({
-        visibleTaskProviders: nextVisibleTaskProviders,
-        defaultTaskSource: nextDefaultTaskSource
-      }).catch(() => {
+      const failed = () =>
         toast.error(
           translate('auto.components.TaskPage.e9139db03f', 'Failed to hide {{value0}}.', {
             value0: label
           })
         )
-      })
+      if (projectTaskIntegration) {
+        // Hiding a source here edits the selected projects' setup, not the global Tasks providers.
+        void hideProviderInRepoTaskIntegrations(selectedRepos, provider)
+          .then((saved) => {
+            if (!saved) {
+              failed()
+            }
+          })
+          .catch(failed)
+        return
+      }
+      void updateSettings({
+        visibleTaskProviders: nextVisibleTaskProviders,
+        defaultTaskSource: nextDefaultTaskSource
+      }).catch(failed)
     },
-    [defaultTaskSource, preferredVisibleTaskProviders, updateSettings]
+    [
+      defaultTaskSource,
+      preferredVisibleTaskProviders,
+      projectTaskIntegration,
+      selectedRepos,
+      updateSettings
+    ]
   )
 
   // Seed preset/query synchronously to avoid a throwaway initial empty-query request.
+  // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: every added field is assigned below before the model is returned.
   const nextModel = model as typeof model & {
     eligibleRepos: typeof eligibleRepos
     resolvedInitialSelection: typeof resolvedInitialSelection

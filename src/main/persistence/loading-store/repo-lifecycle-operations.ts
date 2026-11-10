@@ -179,6 +179,7 @@ export class RepoLifecycleOperations {
         | 'upstream'
         | 'gitRemoteIdentity'
         | 'defaultJiraProject'
+        | 'taskIntegration'
         | 'hookSettings'
         | 'editorFormatter'
         | 'worktreeBaseRef'

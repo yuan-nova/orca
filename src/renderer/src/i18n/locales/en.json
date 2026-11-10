@@ -21325,6 +21325,20 @@
       "keywordDefaultProject": "default project",
       "keywordIssuePicker": "issue picker"
     },
+    "RepositoryTaskIntegrationSection": {
+      "title": "Task integrations",
+      "description": "Choose which task sources Tasks shows for this project. Off follows the global Tasks settings.",
+      "saveFailed": "Could not save task integrations. Update this runtime and try again.",
+      "defaultSource": "Default task source",
+      "accountsHint": "Accounts are connected in Integrations. Linear uses the workspace selected there.",
+      "jiraSite": "Jira site",
+      "jiraSiteFollow": "Site selected in Tasks",
+      "jiraSiteMissing": "Disconnected Jira site",
+      "jiraSiteMissingHint": "This Jira site is no longer connected, so Tasks uses the site selected there. Reconnect it in Integrations or pick another site.",
+      "jiraSiteHint": "Each Jira site has its own URL and token. Add sites in Integrations, then pick the one this project uses.",
+      "keywordTasks": "tasks",
+      "keywordTaskSource": "task source"
+    },
     "managed-runtime": {
       "cancelled": "Installation cancelled.",
       "cancelling": "Cancelling…",

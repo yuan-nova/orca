@@ -49,6 +49,7 @@ export type RepoUpdate = Partial<
     | 'symlinkPaths'
     | 'issueSourcePreference'
     | 'defaultJiraProject'
+    | 'taskIntegration'
     | 'forkSyncMode'
     | 'agentWorkspaceTrust'
     | 'externalWorktreeVisibilityPromptDismissedAt'
